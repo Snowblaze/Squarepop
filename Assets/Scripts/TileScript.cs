@@ -7,15 +7,57 @@ public class TileScript : MonoBehaviour {
 
     static List<Material> materials = new List<Material>();
 
-	// Use this for initialization
-	void Start () {
-        GetComponent<SpriteRenderer>().material = GetRandomMaterial();
+    private SpriteRenderer sprRenderer;
+
+    private Vector2[] adjacentDirections = new Vector2[] { Vector2.up, Vector2.down, Vector2.left, Vector2.right };
+
+    public ObjectPool Pool { get; set; }
+
+    ObjectPool poolInstanceForPrefab;
+
+    private void Awake()
+    {
+        sprRenderer = GetComponent<SpriteRenderer>();
+    }
+    
+    private void Start () {
+        sprRenderer.material = GetRandomMaterial();
 	}
-	
-	// Update is called once per frame
-	void Update () {
+    
+    private void Update () {
 		
 	}
+
+    private void OnMouseDown()
+    {
+        if (sprRenderer.sprite == null)
+        {
+            return;
+        }
+
+        //DoStuff() on click;
+    }
+
+    public TileScript GetPooledInstance()
+    {
+        if (!poolInstanceForPrefab)
+        {
+            poolInstanceForPrefab = ObjectPool.GetPool(this);
+        }
+        return poolInstanceForPrefab.GetObject();
+    }
+
+    public void ReturnToPool()
+    {
+        if (Pool)
+        {
+            Pool.AddObject(this);
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
+    }
 
     public static void GenerateMaterials(Color[] colors)
     {

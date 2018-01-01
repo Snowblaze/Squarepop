@@ -327,10 +327,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1677f46d09b0b3d41a132323401a7ac6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  columns: 4
-  rows: 4
+  columns: 5
+  rows: 5
   boardSize: {x: 5, y: 5}
-  tileOffset: {x: 0, y: 0}
   tilePrefab: {fileID: 1786869100811228, guid: 92a521b8f4cd0a949bfa0ecfaf0b4e4e, type: 2}
   tileColors:
   - {r: 1, g: 0, b: 0, a: 1}

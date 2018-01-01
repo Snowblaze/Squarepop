@@ -61,9 +61,14 @@ public class BoardManager : MonoBehaviour {
             {
                 Vector2 pos = new Vector2(col * tileSize.x + boardOffset.x + transform.position.x, row * tileSize.y + boardOffset.y + transform.position.y);
 
-                GameObject newTile = Instantiate(tilePrefab, pos, Quaternion.identity, transform);
-                newTile.transform.localScale = tileScale;
-                tiles[col, row] = newTile;
+                TileScript spawn = tilePrefab.GetComponent<TileScript>().GetPooledInstance();
+                spawn.transform.position = pos;
+                spawn.transform.localScale = tileScale;
+                spawn.transform.SetParent(transform);
+                tiles[col, row] = spawn.gameObject;
+                //GameObject newTile = Instantiate(tilePrefab, pos, Quaternion.identity, transform);
+                //newTile.transform.localScale = tileScale;
+                //tiles[col, row] = newTile;
             }
         }
     }
