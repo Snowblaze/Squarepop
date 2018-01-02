@@ -6,9 +6,29 @@ using UnityEngine;
 public class BoardManager : MonoBehaviour {
 
     [SerializeField]
-    private int columns;
-    [SerializeField]
-    private int rows;
+    [Range(7,10)]
+    private int columns, rows;
+
+    private int Columns
+    {
+        get
+        {
+            if (columns < 7) return 7;
+            if (columns > 10) return 10;
+            else return columns;
+        }
+    }
+
+    private int Rows
+    {
+        get
+        {
+            if (rows < 7) return 7;
+            if (rows > 10) return 10;
+            else return rows;
+        }
+    }
+
     [SerializeField]
     private Vector2 boardSize;
     private Vector2 boardOffset;
@@ -42,11 +62,11 @@ public class BoardManager : MonoBehaviour {
 
     private void InitializeBoard()
     {
-        tiles = new GameObject[columns, rows];
+        tiles = new GameObject[Columns, Rows];
 
         tileSize = tilePrefab.GetComponent<SpriteRenderer>().sprite.bounds.size;
 
-        Vector2 newTileSize = new Vector2(boardSize.x / (float)columns, boardSize.y / (float)rows);
+        Vector2 newTileSize = new Vector2(boardSize.x / Columns, boardSize.y / Rows);
         tileScale.x = newTileSize.x / tileSize.x;
         tileScale.y = newTileSize.y / tileSize.y;
 
@@ -55,9 +75,9 @@ public class BoardManager : MonoBehaviour {
         boardOffset.x = -(boardSize.x / 2) + tileSize.x / 2;
         boardOffset.y = -(boardSize.y / 2) + tileSize.y / 2;
 
-        for (int col = 0; col < columns; col++)
+        for (int col = 0; col < Columns; col++)
         {
-            for (int row = 0; row < rows; row++)
+            for (int row = 0; row < Rows; row++)
             {
                 Vector2 pos = new Vector2(col * tileSize.x + boardOffset.x + transform.position.x, row * tileSize.y + boardOffset.y + transform.position.y);
 
