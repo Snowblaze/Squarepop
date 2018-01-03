@@ -7,13 +7,13 @@ public class TileScript : MonoBehaviour {
 
     static List<Material> materials = new List<Material>();
 
-    private SpriteRenderer sprRenderer;
-
-    private Vector2[] adjacentDirections = new Vector2[] { Vector2.up, Vector2.down, Vector2.left, Vector2.right };
-
+    public int Column { get; set; }
+    public int Row { get; set; }
     public ObjectPool Pool { get; set; }
+    public bool ToBeReturnedToPool { get; set; }
 
-    ObjectPool poolInstanceForPrefab;
+    private SpriteRenderer sprRenderer;
+    private ObjectPool poolInstanceForPrefab;
 
     private void Awake()
     {
@@ -35,7 +35,7 @@ public class TileScript : MonoBehaviour {
             return;
         }
 
-        //DoStuff() on click;
+        BoardManager.instance.FindColorRegion(Column, Row);
     }
 
     public TileScript GetPooledInstance()
@@ -77,5 +77,10 @@ public class TileScript : MonoBehaviour {
 
         int index = UnityEngine.Random.Range(0, materials.Count);
         return materials[index];
+    }
+
+    public Color GetMaterialColor()
+    {
+        return sprRenderer.material.color;
     }
 }
