@@ -27,7 +27,7 @@ public class TileScript : MonoBehaviour
 
     private void OnEnable()
     {
-        sprRenderer.material = GetRandomMaterial();
+        sprRenderer.sharedMaterial = GetRandomMaterial();
     }
 
     private void Update()
@@ -117,6 +117,6 @@ public class TileScript : MonoBehaviour
 
     public Color GetMaterialColor()
     {
-        return sprRenderer.material.color;
+        return sprRenderer.sharedMaterial.color;
     }
 }
