@@ -5,10 +5,12 @@ using UnityEngine;
 
 public class BoardManager : MonoBehaviour {
 
-    public static BoardManager instance;
+    private static float timer;
+    private const float DisappearTimer = 0.667f;
+    private const int MinBoardSize = 7;
+    private const int MaxBoardSize = 10;
 
-    private const int MinSize = 7;
-    private const int MaxSize = 10;
+    public static BoardManager instance;
 
     [SerializeField]
     [Range(7,10)]
@@ -18,35 +20,34 @@ public class BoardManager : MonoBehaviour {
     {
         get
         {
-            if (columns < MinSize) return MinSize;
-            if (columns > MaxSize) return MaxSize;
+            if (columns < MinBoardSize) return MinBoardSize;
+            if (columns > MaxBoardSize) return MaxBoardSize;
             else return columns;
         }
     }
-
     private int Rows
     {
         get
         {
-            if (rows < MinSize) return MinSize;
-            if (rows > MaxSize) return MaxSize;
+            if (rows < MinBoardSize) return MinBoardSize;
+            if (rows > MaxBoardSize) return MaxBoardSize;
             else return rows;
         }
     }
 
     [SerializeField]
     private Vector2 boardSize;
-    private Vector2 boardOffset;
-
     [SerializeField]
     private GameObject tilePrefab;
     [SerializeField]
     private Color[] tileColors;
 
-    private Vector2 tileSize;
-    private Vector2 tileScale;
+    public Vector2 BoardOffset { get; private set; }
+    public Vector2 TileSize { get; private set; }
+    public Vector2 TileScale { get; private set; }
 
     public TileScript[,] tiles;
+    public List<TileScript> fallingBlocks = new List<TileScript>();
 
     private void Awake()
     {
@@ -64,41 +65,22 @@ public class BoardManager : MonoBehaviour {
     private void Start () {
         InitializeBoard();
     }
-    
+
     private void Update()
     {
-
-    }
-
-    private void InitializeBoard()
-    {
-        tiles = new TileScript[Columns, Rows];
-
-        tileSize = tilePrefab.GetComponent<SpriteRenderer>().sprite.bounds.size;
-
-        Vector2 newTileSize = new Vector2(boardSize.x / Columns, boardSize.y / Rows);
-        tileScale.x = newTileSize.x / tileSize.x;
-        tileScale.y = newTileSize.y / tileSize.y;
-
-        tileSize = newTileSize;
-
-        boardOffset.x = -(boardSize.x / 2) + tileSize.x / 2;
-        boardOffset.y = -(boardSize.y / 2) + tileSize.y / 2;
-
-        for (int col = 0; col < Columns; col++)
+        if (GameState.Mode == GameState.GameMode.Disappearing)
         {
-            for (int row = 0; row < Rows; row++)
+            timer -= Time.deltaTime;
+            if (timer <= 0)
             {
-                Vector2 pos = new Vector2(col * tileSize.x + boardOffset.x + transform.position.x, row * tileSize.y + boardOffset.y + transform.position.y);
-
-                TileScript spawn = tilePrefab.GetComponent<TileScript>().GetPooledInstance();
-                spawn.Row = row;
-                spawn.Column = col;
-                spawn.transform.position = pos;
-                spawn.transform.localScale = tileScale;
-                spawn.transform.SetParent(transform);
-                tiles[col, row] = spawn;
+                GameState.Mode = GameState.GameMode.Playing;
+                SettleBlocks();
             }
+        }
+
+        if (GameState.Mode == GameState.GameMode.Falling && fallingBlocks.Count == 0)
+        {
+            GameState.Mode = GameState.GameMode.Playing;
         }
     }
 
@@ -107,24 +89,122 @@ public class BoardManager : MonoBehaviour {
         Gizmos.DrawWireCube(transform.position, boardSize);
     }
 
+    private void InitializeBoard()
+    {
+        tiles = new TileScript[Columns, Rows];
+
+        TileSize = tilePrefab.GetComponent<SpriteRenderer>().sprite.bounds.size;
+
+        Vector2 newTileSize = new Vector2(boardSize.x / Columns, boardSize.y / Rows);
+
+        TileScale = new Vector2(newTileSize.x / TileSize.x, newTileSize.y / TileSize.y);
+        TileSize = newTileSize;
+
+        BoardOffset = new Vector2(-(boardSize.x / 2) + TileSize.x / 2, -(boardSize.y / 2) + TileSize.y / 2);
+
+        for (int col = 0; col < Columns; col++)
+        {
+            for (int row = 0; row < Rows; row++)
+            {
+                TileScript spawn = tilePrefab.GetComponent<TileScript>().GetPooledInstance();
+                spawn.transform.localScale = TileScale;
+                spawn.transform.SetParent(transform);
+                tiles[col, row] = spawn;
+            }
+        }
+        UpdateIndexes(true);
+    }
+
+    private void UpdateIndexes(bool updatePositions)
+    {
+        for (int x = 0; x < Columns; x++)
+        {
+            for (int y = 0; y < Rows; y++)
+            {
+                if (tiles[x, y] == null) continue;
+
+                UpdateIndex(x, y, updatePositions);
+            }
+        }
+    }
+
+    private void UpdateIndex(int x, int y, bool updatePositions)
+    {
+        tiles[x, y].Row = y;
+        tiles[x, y].Column = x;
+        if (updatePositions)
+            tiles[x, y].UpdatePosition();
+    }
+    
+    public void SettleBlocks()
+    {
+        fallingBlocks.Clear();
+        for (int x = 0; x < Columns; x++)
+        {
+            int? firstEmpty = null;
+            for (int y = 0; y < Rows; y++)
+            {
+                if (tiles[x, y] == null && !firstEmpty.HasValue)
+                {
+                    firstEmpty = y;
+                }
+                else if (firstEmpty.HasValue && tiles[x, y] != null)
+                {
+                    tiles[x, y].LastRow = y;
+                    fallingBlocks.Add(tiles[x, y]);
+                    tiles[x, firstEmpty.Value] = tiles[x, y];
+                    tiles[x, y] = null;
+                    firstEmpty++;
+                }
+            }
+
+            if (!firstEmpty.HasValue) continue;
+            
+            for (int y = firstEmpty.Value; y < Rows; y++)
+            {
+                var tile = tilePrefab.GetComponent<TileScript>().GetPooledInstance();
+                tile.transform.SetParent(transform);
+                tile.LastRow = Rows;
+                var topLeftPoint = Camera.main.ScreenToWorldPoint(new Vector2(0.0f, Screen.height));
+                Vector2 pos = new Vector2(x * TileSize.x + BoardOffset.x + transform.position.x, topLeftPoint.y + (y - firstEmpty.Value) * TileSize.y);
+                tile.transform.position = pos;
+                tiles[x, y] = tile;
+                fallingBlocks.Add(tiles[x, y]);
+            }
+        }
+
+        UpdateIndexes(false);
+
+        if (fallingBlocks.Count > 0)
+        {
+            GameState.Mode = GameState.GameMode.Falling;
+        }
+    }
+
     private void InitializeColors(Color[] colors)
     {
         TileScript.GenerateMaterials(colors);
     }
 
-    public void FindColorRegion(int column, int row)
+    public void TilePressed(int column, int row)
     {
-        List<TileScript> regionTiles = new List<TileScript>();
-        regionTiles.Add(tiles[column, row]);
+        FindColorRegion(column, row);
+    }
+
+    private void FindColorRegion(int column, int row)
+    {
+        List<TileScript> tilesToRemove = new List<TileScript>();
+        List<TileScript> tilesToIterate = new List<TileScript>();
+        tilesToIterate.Add(tiles[column, row]);
         
-        for (int x = 0; x < regionTiles.Count; x++)
+        for (int x = 0; x < tilesToIterate.Count; x++)
         {
-            if (regionTiles[x].ToBeReturnedToPool) continue;
+            if (tilesToIterate[x].ToBeReturnedToPool) continue;
 
-            var localRow = regionTiles[x].Row;
-            var localColumn = regionTiles[x].Column;
+            var localRow = tilesToIterate[x].Row;
+            var localColumn = tilesToIterate[x].Column;
 
-            TryToAddToRegionVertical(regionTiles, tiles[column, row], localColumn, localRow);
+            TryToAddToRegionVertical(tilesToIterate, tiles[column, row], localColumn, localRow);
 
             for (int i = localColumn - 1; i >= 0; i--)
             {
@@ -133,40 +213,46 @@ public class BoardManager : MonoBehaviour {
                 if (CompareTiles(tiles[column, row], i, localRow))
                 {
                     tiles[i, localRow].ToBeReturnedToPool = true;
-                    regionTiles.Add(tiles[i, localRow]);
+                    tilesToRemove.Add(tiles[i, localRow]);
 
-                    TryToAddToRegionVertical(regionTiles, tiles[column, row], i, localRow);
+                    TryToAddToRegionVertical(tilesToIterate, tiles[column, row], i, localRow);
                 }
             }
-            for(int i = localColumn + 1; i < columns; i++)
+            for(int i = localColumn + 1; i < Columns; i++)
             {
                 if (!CompareColors(tiles[column, row], tiles[i, localRow])) break;
 
                 if (CompareTiles(tiles[column, row], i, localRow))
                 {
                     tiles[i, localRow].ToBeReturnedToPool = true;
-                    regionTiles.Add(tiles[i, localRow]);
+                    tilesToRemove.Add(tiles[i, localRow]);
 
-                    TryToAddToRegionVertical(regionTiles, tiles[column, row], i, localRow);
+                    TryToAddToRegionVertical(tilesToIterate, tiles[column, row], i, localRow);
                 }
             }
 
-            regionTiles[x].ToBeReturnedToPool = true;
+            tilesToIterate[x].ToBeReturnedToPool = true;
+            tilesToRemove.Add(tilesToIterate[x]);
         }
 
-        if(regionTiles.Count <= 1)
+        if(tilesToRemove.Count <= 1)
         {
-            for(int i = 0; i < regionTiles.Count; i++)
+            for(int i = 0; i < tilesToRemove.Count; i++)
             {
-                regionTiles[i].ToBeReturnedToPool = false;
+                tilesToRemove[i].ToBeReturnedToPool = false;
             }
             return;
         }
 
-        foreach(var tile in regionTiles)
+        foreach(var tile in tilesToRemove)
         {
+            tile.ToBeReturnedToPool = false;
+            tiles[tile.Column, tile.Row] = null;
             tile.ReturnToPool();
         }
+
+        timer = DisappearTimer;
+        GameState.Mode = GameState.GameMode.Disappearing;
     }
 
     private void TryToAddToRegionVertical(List<TileScript> region, TileScript baseTile, int col, int row)
@@ -185,13 +271,15 @@ public class BoardManager : MonoBehaviour {
 
     private bool CompareTiles(TileScript baseTile, int col, int row)
     {
-        if (col < 0 || col >= columns || row < 0 || row >= rows) return false;
+        if (col < 0 || col >= Columns || row < 0 || row >= Rows || tiles[col, row] == null) return false;
 
         return !tiles[col, row].ToBeReturnedToPool && CompareColors(baseTile, tiles[col, row]);
     }
 
     private bool CompareColors(TileScript baseTile, TileScript tile)
     {
+        if (baseTile == null || tile == null) return false;
+
         return baseTile.GetMaterialColor() == tile.GetMaterialColor();
     }
 }

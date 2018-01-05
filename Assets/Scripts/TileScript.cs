@@ -3,10 +3,13 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class TileScript : MonoBehaviour {
+public class TileScript : MonoBehaviour
+{
+    private const float FallSpeed = 3f;
 
     static List<Material> materials = new List<Material>();
-
+    
+    public int LastRow { get; set; }
     public int Column { get; set; }
     public int Row { get; set; }
     public ObjectPool Pool { get; set; }
@@ -15,18 +18,37 @@ public class TileScript : MonoBehaviour {
     private SpriteRenderer sprRenderer;
     private ObjectPool poolInstanceForPrefab;
 
+    Vector2 tmpPos;
+
     private void Awake()
     {
         sprRenderer = GetComponent<SpriteRenderer>();
     }
-    
-    private void Start () {
+
+    private void OnEnable()
+    {
         sprRenderer.material = GetRandomMaterial();
-	}
-    
-    private void Update () {
-		
-	}
+    }
+
+    private void Update()
+    {
+        if (GameState.Mode == GameState.GameMode.Falling && Row != LastRow)
+        {
+            var targetY = Row * BoardManager.instance.TileSize.y + BoardManager.instance.BoardOffset.y + BoardManager.instance.transform.position.y;
+
+            tmpPos = transform.position;
+            tmpPos.y -= FallSpeed * Time.deltaTime;
+            if (tmpPos.y <= targetY)
+            {
+                BoardManager.instance.fallingBlocks.Remove(this);
+                UpdatePosition();
+            }
+            else
+            {
+                transform.position = tmpPos;
+            }
+        }
+    }
 
     private void OnMouseDown()
     {
@@ -35,7 +57,21 @@ public class TileScript : MonoBehaviour {
             return;
         }
 
-        BoardManager.instance.FindColorRegion(Column, Row);
+        if (GameState.Mode == GameState.GameMode.Playing)
+        {
+            BoardManager.instance.TilePressed(Column, Row);
+            GameState.ActionsTaken++;
+        }
+    }
+
+    public void UpdatePosition()
+    {
+        var tileSize = BoardManager.instance.TileSize;
+        var boardOffset = BoardManager.instance.BoardOffset;
+        var boardPos = BoardManager.instance.transform.position;
+        Vector2 pos = new Vector2(Column * tileSize.x + boardOffset.x + boardPos.x, 
+                                  Row    * tileSize.y + boardOffset.y + boardPos.y);
+        transform.position = pos;
     }
 
     public TileScript GetPooledInstance()
