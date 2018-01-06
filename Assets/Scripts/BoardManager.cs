@@ -15,6 +15,8 @@ public class BoardManager : MonoBehaviour
 
     public static BoardManager instance;
 
+    public TileProvider provider;
+
     [SerializeField]
     [Range(7,10)]
     private int columns, rows;
@@ -44,6 +46,9 @@ public class BoardManager : MonoBehaviour
     private TileScript tilePrefab;
     [SerializeField]
     public List<Color> tileColors = new List<Color>(MaxColorNumber);
+
+    [NonSerialized]
+    public List<Material> materials = new List<Material>();
 
     public Vector2 BoardOffset { get; private set; }
     public Vector2 TileSize { get; private set; }
@@ -75,11 +80,10 @@ public class BoardManager : MonoBehaviour
             instance = this;
         else if (instance != this)
             Destroy(gameObject);
-        
-        DontDestroyOnLoad(gameObject);
 
         if (tileColors == null) throw new Exception("BoardManager: colors array is null.");
         InitializeColors(tileColors);
+        provider = new TileProvider();
     }
     
     private void Start () {
@@ -127,6 +131,7 @@ public class BoardManager : MonoBehaviour
             for (int row = 0; row < Rows; row++)
             {
                 TileScript spawn = tilePrefab.GetPooledInstance(TileType.Color);
+                spawn.LastRow = row;
                 spawn.transform.localScale = TileScale;
                 spawn.transform.SetParent(transform);
                 tiles[col, row] = spawn;
@@ -208,7 +213,14 @@ public class BoardManager : MonoBehaviour
 
     private void InitializeColors(List<Color> colors)
     {
-        TileScript.GenerateMaterials(colors);
+        foreach (var color in colors)
+        {
+            var mat = new Material(Shader.Find("Sprites/Default"))
+            {
+                color = color
+            };
+            materials.Add(mat);
+        }
     }
 
     public void TilePressed(int column, int row)
@@ -247,27 +259,25 @@ public class BoardManager : MonoBehaviour
                 var tile = tiles[i, j];
 
                 if (tile == null) continue;
-
-                tiles[i, j] = null;
-
+                
                 if (tile.tileType != TileType.Color)
                 {
                     TilePressed(i, j);
                     continue;
                 }
+                else
+                {
+
+                    tiles[i, j] = null;
+                }
+
                 tilesToRemove.Add(tile);
             }
         }
 
-        foreach (var tile in tilesToRemove)
-        {
-            tile.ToBeReturnedToPool = false;
-            tiles[tile.Column, tile.Row] = null;
-            tile.ReturnToPool();
-        }
+        ReturnTilesToPool(tilesToRemove);
 
-        timer = DisappearTimer;
-        GameState.Mode = GameState.GameMode.Disappearing;
+        TilePressSuccess();
     }
 
     private void ExplodeLine(int column, int row, bool vertical)
@@ -283,14 +293,17 @@ public class BoardManager : MonoBehaviour
                 var tile = tiles[column, i];
 
                 if (tile == null) continue;
-
-                tiles[column, i] = null;
-
+                
                 if (tile.tileType != TileType.Color)
                 {
                     TilePressed(column, i);
                     continue;
                 }
+                else
+                {
+                    tiles[column, i] = null;
+                }
+
                 tilesToRemove.Add(tile);
             }
         }
@@ -301,27 +314,25 @@ public class BoardManager : MonoBehaviour
                 var tile = tiles[i, row];
 
                 if (tile == null) continue;
-
-                tiles[i, row] = null;
-
+                
                 if (tile.tileType != TileType.Color)
                 {
                     TilePressed(i, row);
                     continue;
                 }
+                else
+                {
+
+                    tiles[i, row] = null;
+                }
+
                 tilesToRemove.Add(tile);
             }
         }
+        
+        ReturnTilesToPool(tilesToRemove);
 
-        foreach (var tile in tilesToRemove)
-        {
-            tile.ToBeReturnedToPool = false;
-            tiles[tile.Column, tile.Row] = null;
-            tile.ReturnToPool();
-        }
-
-        timer = DisappearTimer;
-        GameState.Mode = GameState.GameMode.Disappearing;
+        TilePressSuccess();
     }
 
     private void FindColorRegion(int column, int row)
@@ -377,12 +388,7 @@ public class BoardManager : MonoBehaviour
             return;
         }
 
-        foreach(var tile in tilesToRemove)
-        {
-            tile.ToBeReturnedToPool = false;
-            tiles[tile.Column, tile.Row] = null;
-            tile.ReturnToPool();
-        }
+        ReturnTilesToPool(tilesToRemove);
 
         if(tilesToRemove.Count == 5)
         {
@@ -401,8 +407,25 @@ public class BoardManager : MonoBehaviour
             UpdateIndexes(column, row, true);
         }
 
+        TilePressSuccess();
+    }
+
+    private void TilePressSuccess()
+    {
         timer = DisappearTimer;
         GameState.Mode = GameState.GameMode.Disappearing;
+        GameManager.instance.MoveCounter--;
+    }
+
+    private void ReturnTilesToPool(IEnumerable<TileScript> list)
+    {
+        foreach (var tile in list)
+        {
+            tile.ToBeReturnedToPool = false;
+            tiles[tile.Column, tile.Row] = null;
+            provider.ObserverUpdate(tile);
+            tile.ReturnToPool();
+        }
     }
 
     private void TryToAddToRegionVertical(List<TileScript> region, TileScript baseTile, int col, int row)

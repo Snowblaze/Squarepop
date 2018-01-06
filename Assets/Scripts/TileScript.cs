@@ -2,12 +2,11 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 public class TileScript : MonoBehaviour
 {
     private const float FallSpeed = 3f;
-
-    static List<Material> materials = new List<Material>();
     
     public int LastRow { get; set; }
     public int Column { get; set; }
@@ -31,13 +30,13 @@ public class TileScript : MonoBehaviour
         if(tileType == TileType.Color)
             sprRenderer.sharedMaterial = GetRandomMaterial();
         
-        // Temorary bomb visual
+        // Temporary bomb visual
         if (tileType == TileType.BombRadial)
-            sprRenderer.sharedMaterial = materials[0];
+            sprRenderer.sharedMaterial = BoardManager.instance.materials[0];
         else if (tileType == TileType.BombVertical)
-            sprRenderer.sharedMaterial = materials[1];
+            sprRenderer.sharedMaterial = BoardManager.instance.materials[1];
         else if (tileType == TileType.BombHorizontal)
-            sprRenderer.sharedMaterial = materials[2];
+            sprRenderer.sharedMaterial = BoardManager.instance.materials[2];
     }
 
     private void Update()
@@ -53,6 +52,7 @@ public class TileScript : MonoBehaviour
             {
                 board.fallingBlocks.Remove(this);
                 UpdatePosition();
+                StartCoroutine(Bounce(1));
             }
             else
             {
@@ -61,8 +61,10 @@ public class TileScript : MonoBehaviour
         }
     }
 
-    protected virtual void OnMouseDown()
+    private void OnMouseDown()
     {
+        if (EventSystem.current.IsPointerOverGameObject()) return;
+
         if (sprRenderer.sprite == null)
         {
             return;
@@ -71,7 +73,6 @@ public class TileScript : MonoBehaviour
         if (GameState.Mode == GameState.GameMode.Playing)
         {
             BoardManager.instance.TilePressed(Column, Row);
-            GameState.ActionsTaken++;
         }
     }
 
@@ -84,6 +85,7 @@ public class TileScript : MonoBehaviour
         Vector2 pos = new Vector2(Column * tileSize.x + boardOffset.x + boardPos.x, 
                                   Row    * tileSize.y + boardOffset.y + boardPos.y);
         transform.position = pos;
+        LastRow = Row;
     }
 
     public TileScript GetPooledInstance(TileType type)
@@ -107,22 +109,10 @@ public class TileScript : MonoBehaviour
         }
     }
 
-    public static void GenerateMaterials(List<Color> colors)
-    {
-        foreach (var color in colors)
-        {
-            var mat = new Material(Shader.Find("Sprites/Default"))
-            {
-                color = color
-            };
-            materials.Add(mat);
-        }
-    }
-
     public Material GetRandomMaterial()
     {
+        var materials = BoardManager.instance.materials;
         if (materials.Count == 0) throw new Exception("TileScript: no materials generated.");
-
         int index = UnityEngine.Random.Range(0, materials.Count);
         return materials[index];
     }
@@ -130,5 +120,22 @@ public class TileScript : MonoBehaviour
     public Color GetMaterialColor()
     {
         return sprRenderer.sharedMaterial.color;
+    }
+
+    private IEnumerator Bounce(int bounceTimes)
+    {
+        var bounceSpeed = 1.0f;
+        var bounceAmount = 0.1f;
+        var cachedPos = transform.position;
+        for (int i = 0; i < bounceTimes; i++)
+        {
+            float t = 0.0f;
+            while (t < 1.0)
+            {
+                t += Time.deltaTime * bounceSpeed;
+                transform.position = new Vector2(cachedPos.x, cachedPos.y + Mathf.Sin(Mathf.Clamp01(t) * Mathf.PI) * bounceAmount);
+                yield return null;
+            }
+        }
     }
 }
