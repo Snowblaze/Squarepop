@@ -113,6 +113,54 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1 &39056506
+GameObject:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  serializedVersion: 5
+  m_Component:
+  - component: {fileID: 39056508}
+  - component: {fileID: 39056507}
+  m_Layer: 0
+  m_Name: GameManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &39056507
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 39056506}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 45c0e0154fb1fa44d9ce24ea65589053, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  moveCounter: 30
+  goalsList:
+  - count: 0
+    targetColor: {r: 0, g: 0, b: 0, a: 0}
+  - count: 0
+    targetColor: {r: 0, g: 0, b: 0, a: 0}
+  - count: 0
+    targetColor: {r: 0, g: 0, b: 0, a: 0}
+--- !u!4 &39056508
+Transform:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 39056506}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -2.1590538, y: 0.37331486, z: -17.080078}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 4
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1078038975
 GameObject:
   m_ObjectHideFlags: 0
@@ -330,12 +378,14 @@ MonoBehaviour:
   columns: 7
   rows: 7
   boardSize: {x: 5, y: 5}
-  tilePrefab: {fileID: 1786869100811228, guid: 92a521b8f4cd0a949bfa0ecfaf0b4e4e, type: 2}
+  tilePrefab: {fileID: 114319121939404472, guid: 92a521b8f4cd0a949bfa0ecfaf0b4e4e,
+    type: 2}
   tileColors:
   - {r: 1, g: 1, b: 1, a: 1}
   - {r: 1, g: 0, b: 0, a: 1}
   - {r: 0, g: 1, b: 0, a: 1}
   - {r: 0, g: 0, b: 1, a: 1}
+  fallingBlocks: []
 --- !u!1 &1795588511
 GameObject:
   m_ObjectHideFlags: 0

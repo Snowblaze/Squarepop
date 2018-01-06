@@ -8,7 +8,7 @@ public class ObjectPool : MonoBehaviour
 
     List<TileScript> availableObjects = new List<TileScript>();
 
-    public TileScript GetObject()
+    public TileScript GetObject(TileType type)
     {
         TileScript obj;
         int lastAvailableIndex = availableObjects.Count - 1;
@@ -16,6 +16,7 @@ public class ObjectPool : MonoBehaviour
         {
             obj = availableObjects[lastAvailableIndex];
             availableObjects.RemoveAt(lastAvailableIndex);
+            obj.tileType = type;
             obj.gameObject.SetActive(true);
         }
         else
