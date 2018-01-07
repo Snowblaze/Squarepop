@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 public class TileProvider : IObservable<TileScript>
 {
@@ -17,24 +16,6 @@ public class TileProvider : IObservable<TileScript>
         if (!observers.Contains(observer))
             observers.Add(observer);
         return new Unsubscriber(observers, observer);
-    }
-
-    private class Unsubscriber : IDisposable
-    {
-        private List<IObserver<TileScript>> _observers;
-        private IObserver<TileScript> _observer;
-
-        public Unsubscriber(List<IObserver<TileScript>> observers, IObserver<TileScript> observer)
-        {
-            this._observers = observers;
-            this._observer = observer;
-        }
-
-        public void Dispose()
-        {
-            if (_observer != null && _observers.Contains(_observer))
-                _observers.Remove(_observer);
-        }
     }
 
     public void ObserverUpdate(TileScript data)
@@ -55,5 +36,23 @@ public class TileProvider : IObservable<TileScript>
                 observer.OnCompleted();
 
         observers.Clear();
+    }
+
+    private class Unsubscriber : IDisposable
+    {
+        private List<IObserver<TileScript>> _observers;
+        private IObserver<TileScript> _observer;
+
+        public Unsubscriber(List<IObserver<TileScript>> observers, IObserver<TileScript> observer)
+        {
+            this._observers = observers;
+            this._observer = observer;
+        }
+
+        public void Dispose()
+        {
+            if (_observer != null && _observers.Contains(_observer))
+                _observers.Remove(_observer);
+        }
     }
 }

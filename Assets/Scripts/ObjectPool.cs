@@ -1,12 +1,11 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 public class ObjectPool : MonoBehaviour
 {
-    TileScript prefab;
+    private TileScript prefab;
 
-    List<TileScript> availableObjects = new List<TileScript>();
+    private List<TileScript> availableObjects = new List<TileScript>();
 
     public TileScript GetObject(TileType type)
     {

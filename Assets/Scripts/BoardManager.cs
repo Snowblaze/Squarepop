@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -11,23 +10,35 @@ public class BoardManager : MonoBehaviour
     private const int MinColorNumber = 4;
     private const int MaxColorNumber = 7;
 
+    public static BoardManager instance;
     private static float timer;
 
-    public static BoardManager instance;
-
     public TileProvider provider;
+    [NonSerialized]
+    public List<Material> materials = new List<Material>();
+    public TileScript[,] tiles;
+    public List<TileScript> fallingBlocks = new List<TileScript>();
 
     [SerializeField]
     [Range(7,10)]
     private int columns, rows;
-
+    [SerializeField]
+    private Vector2 boardSize;
+    [SerializeField]
+    private TileScript tilePrefab;
+    [SerializeField]
+    private List<Color> tileColors = new List<Color>(MaxColorNumber);
+    
+    public Vector2 BoardOffset { get; private set; }
+    public Vector2 TileSize { get; private set; }
+    public Vector2 TileScale { get; private set; }
     private int Columns
     {
         get
         {
             if (columns < MinBoardSize) return MinBoardSize;
             if (columns > MaxBoardSize) return MaxBoardSize;
-            else return columns;
+            return columns;
         }
     }
     private int Rows
@@ -36,41 +47,7 @@ public class BoardManager : MonoBehaviour
         {
             if (rows < MinBoardSize) return MinBoardSize;
             if (rows > MaxBoardSize) return MaxBoardSize;
-            else return rows;
-        }
-    }
-
-    [SerializeField]
-    private Vector2 boardSize;
-    [SerializeField]
-    private TileScript tilePrefab;
-    [SerializeField]
-    public List<Color> tileColors = new List<Color>(MaxColorNumber);
-
-    [NonSerialized]
-    public List<Material> materials = new List<Material>();
-
-    public Vector2 BoardOffset { get; private set; }
-    public Vector2 TileSize { get; private set; }
-    public Vector2 TileScale { get; private set; }
-
-    public TileScript[,] tiles;
-    public List<TileScript> fallingBlocks = new List<TileScript>();
-
-    private void OnValidate()
-    {
-        if (tileColors.Count > MaxColorNumber)
-        {
-            Debug.LogWarning("Colors' max size is of " + MaxColorNumber);
-            tileColors.RemoveRange(MaxColorNumber, tileColors.Count - MaxColorNumber);
-        }
-        else if(tileColors.Count < MinColorNumber)
-        {
-            Debug.LogWarning("Colors' min size is of " + MinColorNumber);
-            for(int i = 0; i < MinColorNumber - tileColors.Count; i++)
-            {
-                tileColors.Add(new Color());
-            }
+            return rows;
         }
     }
 
@@ -111,6 +88,42 @@ public class BoardManager : MonoBehaviour
     private void OnDrawGizmos()
     {
         Gizmos.DrawWireCube(transform.position, boardSize);
+    }
+    
+    private void OnValidate()
+    {
+        if (tileColors.Count > MaxColorNumber)
+        {
+            Debug.LogWarning("Colors' max size is of " + MaxColorNumber);
+            tileColors.RemoveRange(MaxColorNumber, tileColors.Count - MaxColorNumber);
+        }
+        else if (tileColors.Count < MinColorNumber)
+        {
+            Debug.LogWarning("Colors' min size is of " + MinColorNumber);
+            for (int i = 0; i < MinColorNumber - tileColors.Count; i++)
+            {
+                tileColors.Add(new Color());
+            }
+        }
+    }
+    
+    public void TilePressed(int column, int row)
+    {
+        switch (tiles[column, row].tileType)
+        {
+            case TileType.Color:
+                FindColorRegion(column, row);
+                break;
+            case TileType.BombRadial:
+                ExplodeRadial(column, row);
+                break;
+            case TileType.BombVertical:
+                ExplodeLine(column, row, true);
+                break;
+            case TileType.BombHorizontal:
+                ExplodeLine(column, row, false);
+                break;
+        }
     }
 
     private void InitializeBoard()
@@ -155,13 +168,14 @@ public class BoardManager : MonoBehaviour
 
     private void UpdateIndexes(int x, int y, bool updatePositions)
     {
-        tiles[x, y].Row = y;
-        tiles[x, y].Column = x;
+        var tile = tiles[x, y];
+        tile.Row = y;
+        tile.Column = x;
         if (updatePositions)
-            tiles[x, y].UpdatePosition();
+            tile.UpdatePosition();
     }
     
-    public void SettleBlocks()
+    private void SettleBlocks()
     {
         fallingBlocks.Clear();
         for (int x = 0; x < Columns; x++)
@@ -220,25 +234,6 @@ public class BoardManager : MonoBehaviour
                 color = color
             };
             materials.Add(mat);
-        }
-    }
-
-    public void TilePressed(int column, int row)
-    {
-        switch(tiles[column,row].tileType)
-        {
-            case TileType.Color:
-                FindColorRegion(column, row);
-                break;
-            case TileType.BombRadial:
-                ExplodeRadial(column, row);
-                break;
-            case TileType.BombVertical:
-                ExplodeLine(column, row, true);
-                break;
-            case TileType.BombHorizontal:
-                ExplodeLine(column, row, false);
-                break;
         }
     }
 

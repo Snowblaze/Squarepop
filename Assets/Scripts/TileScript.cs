@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -8,35 +7,36 @@ public class TileScript : MonoBehaviour
 {
     private const float FallSpeed = 3f;
     
+    public TileType tileType;
+
+    private SpriteRenderer spriteRenderer;
+    private ObjectPool poolInstanceForPrefab;
+    private Vector2 tmpPos;
+
     public int LastRow { get; set; }
     public int Column { get; set; }
     public int Row { get; set; }
     public ObjectPool Pool { get; set; }
     public bool ToBeReturnedToPool { get; set; }
-    public TileType tileType;
-
-    private SpriteRenderer sprRenderer;
-    private ObjectPool poolInstanceForPrefab;
-
-    Vector2 tmpPos;
 
     private void Awake()
     {
-        sprRenderer = GetComponent<SpriteRenderer>();
+        spriteRenderer = GetComponent<SpriteRenderer>();
     }
 
     private void OnEnable()
     {
         if(tileType == TileType.Color)
-            sprRenderer.sharedMaterial = GetRandomMaterial();
+            spriteRenderer.sharedMaterial = GetRandomMaterial();
         
-        // Temporary bomb visual
+        // Temporary bomb visuals
+        // To be deleted
         if (tileType == TileType.BombRadial)
-            sprRenderer.sharedMaterial = BoardManager.instance.materials[0];
+            spriteRenderer.sharedMaterial = BoardManager.instance.materials[0];
         else if (tileType == TileType.BombVertical)
-            sprRenderer.sharedMaterial = BoardManager.instance.materials[1];
+            spriteRenderer.sharedMaterial = BoardManager.instance.materials[1];
         else if (tileType == TileType.BombHorizontal)
-            sprRenderer.sharedMaterial = BoardManager.instance.materials[2];
+            spriteRenderer.sharedMaterial = BoardManager.instance.materials[2];
     }
 
     private void Update()
@@ -65,7 +65,7 @@ public class TileScript : MonoBehaviour
     {
         if (EventSystem.current.IsPointerOverGameObject()) return;
 
-        if (sprRenderer.sprite == null)
+        if (spriteRenderer.sprite == null)
         {
             return;
         }
@@ -119,7 +119,7 @@ public class TileScript : MonoBehaviour
 
     public Color GetMaterialColor()
     {
-        return sprRenderer.sharedMaterial.color;
+        return spriteRenderer.sharedMaterial.color;
     }
 
     private IEnumerator Bounce(int bounceTimes)

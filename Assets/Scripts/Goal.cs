@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -12,8 +9,7 @@ public class Goal : MonoBehaviour, IObserver<TileScript>
     private Image background;
     [SerializeField]
     private Text countText;
-
-    GoalData data;
+    private GoalData data;
 
     public delegate void MethodContainer();
     public event MethodContainer OnFinish;

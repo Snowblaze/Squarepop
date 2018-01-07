@@ -1,16 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-public static class GameState
+﻿public static class GameState
 {
+    public static GameMode Mode = GameMode.Playing;
+
     public enum GameMode
     {
         Playing,
         Disappearing,
         Falling,
     }
-
-    public static GameMode Mode = GameMode.Playing;
 }

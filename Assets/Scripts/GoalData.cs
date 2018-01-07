@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using UnityEngine;
 
 [Serializable]
@@ -20,19 +17,10 @@ public class GoalData
         }
         set
         {
-            count = value < 0 ? 0 : value;
+            count = value > 0 
+                ? value 
+                : 0;
         }
     }
-
-    public Color TargetColor
-    {
-        get
-        {
-            return targetColor;
-        }
-        set
-        {
-            targetColor = value;
-        }
-    }
+    public Color TargetColor { get; set; }
 }
