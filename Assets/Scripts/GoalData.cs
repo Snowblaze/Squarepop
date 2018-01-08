@@ -22,5 +22,15 @@ public class GoalData
                 : 0;
         }
     }
-    public Color TargetColor { get; set; }
+    public Color TargetColor
+    {
+        get
+        {
+            return targetColor;
+        }
+        set
+        {
+            targetColor = value;
+        }
+    }
 }
