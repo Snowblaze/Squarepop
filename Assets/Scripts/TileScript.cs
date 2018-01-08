@@ -28,15 +28,8 @@ public class TileScript : MonoBehaviour
     {
         if(tileType == TileType.Color)
             spriteRenderer.sharedMaterial = GetRandomMaterial();
-        
-        // Temporary bomb visuals
-        // To be deleted
-        if (tileType == TileType.BombRadial)
-            spriteRenderer.sharedMaterial = BoardManager.instance.materials[0];
-        else if (tileType == TileType.BombVertical)
-            spriteRenderer.sharedMaterial = BoardManager.instance.materials[1];
-        else if (tileType == TileType.BombHorizontal)
-            spriteRenderer.sharedMaterial = BoardManager.instance.materials[2];
+
+        spriteRenderer.sprite = BoardManager.instance.GetTileSprite(tileType);
     }
 
     private void Update()

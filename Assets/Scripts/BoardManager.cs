@@ -18,7 +18,9 @@ public class BoardManager : MonoBehaviour
     public List<Material> materials = new List<Material>();
     public TileScript[,] tiles;
     public List<TileScript> fallingBlocks = new List<TileScript>();
-
+    
+    [SerializeField]
+    private Sprite[] tileSprites; // Tile sprites should be in the same order as in the enum
     [SerializeField]
     [Range(7,10)]
     private int columns, rows;
@@ -449,5 +451,10 @@ public class BoardManager : MonoBehaviour
         if (baseTile == null || tile == null) return false;
 
         return baseTile.GetMaterialColor() == tile.GetMaterialColor();
+    }
+
+    public Sprite GetTileSprite(TileType type)
+    {
+        return tileSprites[(int)type];
     }
 }

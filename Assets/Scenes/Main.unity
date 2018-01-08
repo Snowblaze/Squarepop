@@ -262,6 +262,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 45c0e0154fb1fa44d9ce24ea65589053, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  goalsList:
+  - count: 10
+    targetColor: {r: 1, g: 1, b: 1, a: 1}
+  - count: 5
+    targetColor: {r: 1, g: 0, b: 0, a: 1}
   moveCounter: 10
   moveCounterTxt: {fileID: 686879202}
   goalsPanel: {fileID: 1395040065}
@@ -269,11 +274,6 @@ MonoBehaviour:
   endPanel: {fileID: 1871741230}
   goalPrefab: {fileID: 114560420158706786, guid: 87d970dd6199a3348babd46635eb8f53,
     type: 2}
-  goalsList:
-  - count: 10
-    targetColor: {r: 1, g: 0, b: 0, a: 1}
-  - count: 5
-    targetColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!4 &39056508
 Transform:
   m_ObjectHideFlags: 0
@@ -817,6 +817,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1677f46d09b0b3d41a132323401a7ac6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  fallingBlocks: []
+  tileSprites:
+  - {fileID: 21300000, guid: d090347e792d1e24aaf32ec193840c6b, type: 3}
+  - {fileID: 21300000, guid: 6b31d16d16b1d824db2091eb2a9fb272, type: 3}
+  - {fileID: 21300000, guid: d6ca5d4777ff9db4f833948a3ae85237, type: 3}
+  - {fileID: 21300000, guid: 032d167ecd9416d44b159739d4e2c862, type: 3}
   columns: 7
   rows: 8
   boardSize: {x: 5, y: 5}
@@ -827,7 +833,6 @@ MonoBehaviour:
   - {r: 1, g: 0, b: 0, a: 1}
   - {r: 0, g: 1, b: 0, a: 1}
   - {r: 0, g: 0, b: 1, a: 1}
-  fallingBlocks: []
 --- !u!1 &1795588511
 GameObject:
   m_ObjectHideFlags: 0
